@@ -1,0 +1,115 @@
+<script setup>
+import { ref, onMounted } from 'vue';
+import BackendLayout from '@/Layouts/BackendLayout.vue';
+import { router, useForm, usePage } from '@inertiajs/vue3';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import AlertMessage from '@/Components/AlertMessage.vue';
+import { displayResponse, displayWarning } from '@/responseMessage.js';
+
+ const props = defineProps(["{{routeName}}", "id"]);
+
+const form = useForm({
+{{fields}}
+imagePreview: props.{{routeName}}?.image ?? "",
+filePreview: props.{{routeName}}?.file ?? "",
+_method: props.{{routeName}}?.id ? "put" : "post",
+});
+
+const handleimageChange = (event) => {
+const file = event.target.files[0];
+form.image = file;
+
+// Display image preview
+const reader = new FileReader();
+reader.onload = (e) => {
+form.imagePreview = e.target.result;
+};
+reader.readAsDataURL(file);
+};
+
+const handlefileChange = (event) => {
+const file = event.target.files[0];
+form.file = file;
+};
+
+const submit = () => {
+const routeName = props.id
+? route("backend.{{routeName}}.update", props.id)
+            : route("backend.{{routeName}}.store");
+          form
+            .transform((data) => ({
+              ...data,
+              remember: "",
+              isDirty: false,
+            }))
+            .post(routeName, {
+              onSuccess: (response) => {
+                if (!props.id) form.reset();
+                displayResponse(response);
+              },
+              onError: (errorObject) => {
+                displayWarning(errorObject);
+              },
+            });
+        };
+        </script>
+
+<template>
+  <BackendLayout>
+    <div class="row">
+      <!-- Column starts -->
+      <div class="col-xl-12">
+        <div class="card dz-card" id="bootstrap-table1">
+          <div class="card-header flex-wrap border-0">
+            <div>
+              <Link
+                :href="route('backend.routeName.index')"
+                type="button"
+                class="btn px-4 py-2 btn-primary"
+              >
+                View Role List<span class="badge text-bg-light ms-2 mb-0"
+                  >1</span
+                >
+              </Link>
+            </div>
+          </div>
+          <!--tab-content-->
+          <div class="tab-content" id="myTabContent">
+            <div
+              class="tab-pane fade active show"
+              id="Preview"
+              role="tabpanel"
+              aria-labelledby="home-tab"
+            >
+              <div class="card-body pt-0">
+                <form @submit.prevent="submit" class="pt-3">
+                  <AlertMessage />
+                  <div
+                    class="row g-3"
+                  >
+                    {{ fieldsinputs }}
+                  </div>
+
+                  
+                     <div class="d-flex justify-content-end mt-4">
+                    <PrimaryButton
+                      type="submit"
+                      :class="{ 'opacity-50': form.processing }"
+                      :disabled="form.processing"
+                    >
+                      {{ props.id ? "Update" : "Create" }}
+                    </PrimaryButton>
+                  </div>
+                  
+                </form>
+              </div>
+            </div>
+          </div>
+          <!--/tab-content-->
+        </div>
+      </div>
+    </div>
+  </BackendLayout>
+</template>
