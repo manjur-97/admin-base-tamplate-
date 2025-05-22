@@ -82,6 +82,28 @@ class MenuSeeder extends Seeder
             ],
             [
 
+                'name' => 'Website Menu',
+                'icon' => 'fas fa-home',
+                'route' => 'backend.websitemenu.index',
+                'description' => 'Website Menu',
+                'sorting' => 2,
+                'parent_name' => null,
+                'permission_name' => 'admin',
+                'status' => 'Active',
+            ],
+            [
+
+                'name' => 'Website Page',
+                'icon' => 'fas fa-home',
+                'route' => 'backend.websitepage.index',
+                'description' => 'Website Page',
+                'sorting' => 3,
+                'parent_name' => null,
+                'permission_name' => 'admin',
+                'status' => 'Active',
+            ],
+            [
+
                 'name' => 'Software Setting',
                 'icon' => 'fas fa-cogs',
                 'route' => null,

@@ -2,6 +2,7 @@
 
 
 use App\Http\Controllers\Backend\AdminController;
+use App\Http\Controllers\Backend\CmsSettingController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\Backend\PermissionController;
@@ -83,5 +84,8 @@ Route::group(['middleware' => 'AdminAuth'], function () {
     Route::post('profile/password_update', [AdminController::class, 'password_update'])->name('profile.password_update');
 
     include 'dynamic_route.php';
+    Route::get('cms-setting/header-list', [CmsSettingController::class, 'headerList'])->name('cms-setting.header-list');
 });
 
+
+Route::get('cms-setting/footer-list', [CmsSettingController::class, 'footerList'])->name('cms-setting.footer-list');

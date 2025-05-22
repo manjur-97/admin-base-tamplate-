@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Cms\CmsController;
+use App\Http\Controllers\Backend\CmsSettingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -15,20 +17,17 @@ use Inertia\Inertia;
 |
 */
 
-Route::get('/', function () {
+Route::get('/', [CmsController::class, 'index'])->name('cms.home');
 
-    if (auth()->guard('admin')->check()) {
-        // Redirect to the admin dashboard
-        return redirect()->route('backend.dashboard');
-    } elseif (auth()->guard('employee')->check()) {
-        // Redirect to the employee dashboard
-        return redirect()->route('backend.employee_dashboard');
-    } else {
-        // Redirect to the backend home if the user is not authenticated
-        return redirect()->route('backend.home');
-    }
-});
+Route::get('/cms/settings', [CmsSettingController::class, 'index'])->name('cms.settings.index');
+Route::post('/cms/settings/save', [CmsSettingController::class, 'saveSetting'])->name('cms.settings.save');
+Route::get('/cms/settings/get/{component}', [CmsSettingController::class, 'getComponent'])->name('cms.settings.get');
 
+Route::get('/cms/settings/headers', [CmsSettingController::class, 'headerList'])->name('cms.settings.headers');
+Route::post('/cms/settings/save-header', [CmsSettingController::class, 'saveHeader'])->name('cms.settings.save-header');
+
+Route::get('/cms/settings/footers', [CmsSettingController::class, 'footerList'])->name('cms.settings.footers');
+Route::post('/cms/settings/save-footer', [CmsSettingController::class, 'saveFooter'])->name('cms.settings.save-footer');
 
 Route::middleware([
     'auth:sanctum',
