@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Traits\SystemTrait;
 use Exception;
+use App\Models\WebsiteMenu;
+use Illuminate\Support\Str;
 
 class WebsiteController extends Controller
 {
@@ -24,21 +26,88 @@ class WebsiteController extends Controller
 
     public function index()
     {
-        return Inertia::render(
-            'Backend/WebsiteMenu/Index',
-            [
-                'pageTitle' => fn() => 'WebsiteMenu List',
-                'breadcrumbs' => fn() => [
-                    ['link' => null, 'title' => 'WebsiteMenu Manage'],
-                    ['link' => route('backend.websitemenu.index'), 'title' => 'WebsiteMenu List'],
-                ],
-                'tableHeaders' => fn() => $this->getTableHeaders(),
-                'dataFields' => fn() => $this->dataFields(),
-                'datas' => fn() => $this->getDatas(),
-                'countedData' => fn() => $this->countedData(),
-            ]
-        );
+        $menus = WebsiteMenu::whereNull('parent_id')
+            ->with('children')
+            ->orderBy('order')
+            ->get();
+
+        return inertia('Backend/WebsiteMenu/Index', [
+            'menus' => $menus
+        ]);
     }
+
+    public function create()
+    {
+        $parentMenus = WebsiteMenu::whereNull('parent_id')->get();
+        return inertia('Backend/WebsiteMenu/Form', [
+            'parentMenus' => $parentMenus
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'parent_id' => 'nullable|exists:website_menus,id',
+            'order' => 'required|integer|min:0',
+            'status' => 'required|in:Active,Inactive'
+        ]);
+
+        $menu = WebsiteMenu::create([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'parent_id' => $request->parent_id,
+            'order' => $request->order,
+            'status' => $request->status
+        ]);
+
+        return redirect()->route('backend.websitemenu.index')
+            ->with('success', 'Menu created successfully.');
+    }
+
+    public function edit(WebsiteMenu $menu)
+    {
+        $parentMenus = WebsiteMenu::whereNull('parent_id')
+            ->where('id', '!=', $menu->id)
+            ->get();
+
+        return inertia('Backend/WebsiteMenu/Form', [
+            'menu' => $menu,
+            'parentMenus' => $parentMenus
+        ]);
+    }
+
+    public function update(Request $request, WebsiteMenu $menu)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'parent_id' => 'nullable|exists:website_menus,id',
+            'order' => 'required|integer|min:0',
+            'status' => 'required|in:Active,Inactive'
+        ]);
+
+        $menu->update([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'parent_id' => $request->parent_id,
+            'order' => $request->order,
+            'status' => $request->status
+        ]);
+
+        return redirect()->route('website.menus.index')
+            ->with('success', 'Menu updated successfully.');
+    }
+
+    public function destroy(WebsiteMenu $menu)
+    {
+        // Delete all children first
+        $menu->children()->delete();
+        $menu->delete();
+
+        return redirect()->route('website.menus.index')
+            ->with('success', 'Menu deleted successfully.');
+    }
+
     private function countedData()
     {
         $query = $this->WebsiteMenuService->list();
@@ -123,101 +192,6 @@ class WebsiteController extends Controller
         ];
     }
 
-    public function create()
-    {
-        return Inertia::render(
-            'Backend/WebsiteMenu/Form',
-            [
-                'pageTitle' => fn() => 'WebsiteMenu Create',
-                'breadcrumbs' => fn() => [
-                    ['link' => null, 'title' => 'WebsiteMenu Manage'],
-                    ['link' => route('backend.websitemenu.create'), 'title' => 'WebsiteMenu Create'],
-                ],
-                'countedData' => fn() => $this->countedData(),
-            ]
-        );
-    }
-
-    public function store(WebsiteMenuRequest $request)
-    {
-        DB::beginTransaction();
-        try {
-            $data = $request->validated();
-
-            $dataInfo = $this->WebsiteMenuService->create($data);
-
-            if ($dataInfo) {
-                $message = 'WebsiteMenu created successfully';
-                $this->storeAdminWorkLog($dataInfo->id, 'website_menus', $message);
-
-                DB::commit();
-
-                return redirect()->route("backend.websitemenu.index")->with('successMessage', $message);
-            } else {
-                DB::rollBack();
-                $message = "Failed to create WebsiteMenu.";
-                return redirect()->back()->with('errorMessage', $message);
-            }
-        } catch (Exception $err) {
-            DB::rollBack();
-            $this->storeSystemError('Backend', 'WebsiteController', 'store', substr($err->getMessage(), 0, 1000));
-            $message = "Server Errors Occurred. Please Try Again.";
-            return redirect()->back()->with('errorMessage', $message);
-        }
-    }
-
-    public function edit($id)
-    {
-        $websitemenu = $this->WebsiteMenuService->find($id);
-
-        return Inertia::render(
-            'Backend/WebsiteMenu/Form',
-            [
-                'pageTitle' => fn() => 'WebsiteMenu Edit',
-                'breadcrumbs' => fn() => [
-                    ['link' => null, 'title' => 'WebsiteMenu Manage'],
-                    ['link' => route('backend.websitemenu.edit', $id), 'title' => 'WebsiteMenu Edit'],
-                ],
-                'websitemenu' => fn() => $websitemenu,
-                'id' => fn() => $id,
-                'countedData' => fn() => $this->countedData(),
-            ]
-        );
-    }
-
-    public function update(WebsiteMenuRequest $request, $id)
-    {
-        DB::beginTransaction();
-        try {
-            $data = $request->validated();
-            $websitemenu = $this->WebsiteMenuService->find($id);
-
-
-
-
-
-            $dataInfo = $this->WebsiteMenuService->update($data, $id);
-
-            if ($dataInfo) {
-                $message = 'WebsiteMenu updated successfully';
-                $this->storeAdminWorkLog($dataInfo->id, 'website_menus', $message);
-
-                DB::commit();
-
-                return redirect()->route("backend.websitemenu.index")->with('successMessage', $message);
-            } else {
-                DB::rollBack();
-                $message = "Failed to update WebsiteMenu.";
-                return redirect()->back()->with('errorMessage', $message);
-            }
-        } catch (Exception $err) {
-            DB::rollBack();
-            $this->storeSystemError('Backend', 'WebsiteController', 'update', substr($err->getMessage(), 0, 1000));
-            $message = "Server Errors Occurred. Please Try Again.";
-            return redirect()->back()->with('errorMessage', $message);
-        }
-    }
-
     public function changeStatus($id, $status)
     {
         try {
@@ -244,41 +218,6 @@ class WebsiteController extends Controller
         } catch (Exception $err) {
             DB::rollBack();
             $this->storeSystemError('Backend', 'WebsiteController', 'changeStatus', substr($err->getMessage(), 0, 1000));
-            DB::commit();
-            $message = "Server Errors Occur. Please Try Again.";
-            return redirect()
-                ->back()
-                ->with('errorMessage', $message);
-        }
-    }
-
-    public function destroy($id)
-    {
-
-        DB::beginTransaction();
-
-        try {
-
-            if ($this->WebsiteMenuService->delete($id)) {
-                $message = 'WebsiteMenu deleted successfully';
-                $this->storeAdminWorkLog($id, 'website_menus', $message);
-
-                DB::commit();
-
-                return redirect()
-                    ->back()
-                    ->with('successMessage', $message);
-            } else {
-                DB::rollBack();
-
-                $message = "Failed To Delete WebsiteMenu.";
-                return redirect()
-                    ->back()
-                    ->with('errorMessage', $message);
-            }
-        } catch (Exception $err) {
-            DB::rollBack();
-            $this->storeSystemError('Backend', 'WebsiteController', 'destroy', substr($err->getMessage(), 0, 1000));
             DB::commit();
             $message = "Server Errors Occur. Please Try Again.";
             return redirect()

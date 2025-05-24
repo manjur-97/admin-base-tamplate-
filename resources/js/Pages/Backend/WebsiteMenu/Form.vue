@@ -8,23 +8,17 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AlertMessage from "@/Components/AlertMessage.vue";
 import { displayResponse, displayWarning } from "@/responseMessage.js";
 
-const props = defineProps(["websitemenu", "id", "countedData"
-]);
+const props = defineProps(["websitemenu", "id", "countedData", "parentMenus"]);
 
 const form = useForm({
   name: props.websitemenu?.name ?? "",
-
-  slug: props.websitemenu?.slug ?? "",
-
+  parent_id: props.websitemenu?.parent_id ?? "",
   order: props.websitemenu?.order ?? "",
-
   status: props.websitemenu?.status ?? "",
   imagePreview: props.websitemenu?.image ?? "",
   filePreview: props.websitemenu?.file ?? "",
   _method: props.websitemenu?.id ? "put" : "post",
 });
-
-
 
 const submit = () => {
   const routeName = props.id
@@ -83,15 +77,22 @@ const submit = () => {
 </div>
 
 <div class="col-md-6">
-  <InputLabel for="slug" value="Slug" />
-  <input
-    id="slug"
+  <InputLabel for="parent_id" value="Parent Menu (Optional)" />
+  <select
+    id="parent_id"
     class="form-control"
-    v-model="form.slug"
-    type="text"
-    placeholder="Slug"
-  />
-  <InputError class="mt-2" :message="form.errors.slug" />
+    v-model="form.parent_id"
+  >
+    <option value="">None</option>
+    <option
+      v-for="parent in parentMenus"
+      :key="parent.id"
+      :value="parent.id"
+    >
+      {{ parent.name }}
+    </option>
+  </select>
+  <InputError class="mt-2" :message="form.errors.parent_id" />
 </div>
 
 <div class="col-md-6">
@@ -104,6 +105,19 @@ const submit = () => {
     placeholder="Order"
   />
   <InputError class="mt-2" :message="form.errors.order" />
+</div>
+
+<div class="col-md-6">
+  <InputLabel for="status" value="Status" />
+  <select
+    id="status"
+    class="form-control"
+    v-model="form.status"
+  >
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
+  <InputError class="mt-2" :message="form.errors.status" />
 </div>
 
               </div>

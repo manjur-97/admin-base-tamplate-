@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\CmsSetting;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Blade;
 
 class CmsSettingController extends Controller
 {
@@ -17,6 +19,37 @@ class CmsSettingController extends Controller
         $headers = [];
         $activeHeader = CmsSetting::first();
 
+        // Create dummy menu data for preview
+        $dummyMenus = collect([
+            (object)[
+                'name' => 'Home',
+                'url' => '#',
+                'children' => collect([])
+            ],
+            (object)[
+                'name' => 'Products',
+                'url' => '#',
+                'children' => collect([
+                    (object)['name' => 'Category 1', 'url' => '#'],
+                    (object)['name' => 'Category 2', 'url' => '#'],
+                    (object)['name' => 'Category 3', 'url' => '#']
+                ])
+            ],
+            (object)[
+                'name' => 'About',
+                'url' => '#',
+                'children' => collect([])
+            ],
+            (object)[
+                'name' => 'Contact',
+                'url' => '#',
+                'children' => collect([
+                    (object)['name' => 'Support', 'url' => '#'],
+                    (object)['name' => 'Sales', 'url' => '#']
+                ])
+            ]
+        ]);
+
         foreach ($headerFiles as $file) {
             $fileName = $file->getFilename();
 
@@ -25,12 +58,15 @@ class CmsSettingController extends Controller
                 $name = 'Header ' . ucfirst($id);
                 $fileContent = File::get($file->getPathname());
 
+                // Process the Blade template with dummy data
+                $processedContent = Blade::render($fileContent, ['website_menus' => $dummyMenus]);
+
                 $headers[] = [
                     'id' => $id,
                     'file_name' => $fileName,
                     'name' => $name,
                     'file' => str_replace('.blade.php', '', $fileName),
-                    'content' => $fileContent,
+                    'content' => $processedContent,
                     'is_active' => $activeHeader && $activeHeader->header == $fileName
                 ];
             }

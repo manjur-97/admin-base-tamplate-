@@ -14,17 +14,38 @@ class WebsiteMenu extends Model
 
     protected $table = 'website_menus';
 
-    protected $fillable = [    'name',    'slug',    'order',];
+    protected $fillable = [
+        'name',
+        'slug',
+        'order',
+        'parent_id',
+        'status'
+    ];
 
-protected static function boot()
-{
-    parent::boot();
-    static::saving(function ($model) {
-        $model->created_at = date('Y-m-d H:i:s');
-    });
+    protected static function boot()
+    {
+        parent::boot();
+        static::saving(function ($model) {
+            $model->created_at = date('Y-m-d H:i:s');
+        });
 
-    static::updating(function ($model) {
-        $model->updated_at = date('Y-m-d H:i:s');
-    });
-}     
+        static::updating(function ($model) {
+            $model->updated_at = date('Y-m-d H:i:s');
+        });
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(WebsiteMenu::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(WebsiteMenu::class, 'parent_id')->orderBy('order');
+    }
+
+    public function allChildren()
+    {
+        return $this->children()->with('allChildren');
+    }
 }

@@ -1,4 +1,3 @@
-
 <script setup>
     import { ref } from "vue";
     import BackendLayout from '@/Layouts/BackendLayout.vue';
@@ -8,10 +7,13 @@
 
     let props = defineProps({
         filters: Object,
+        menus: {
+            type: Array,
+            required: true
+        }
     });
 
     const filters = ref({
-
         numOfData: props.filters?.numOfData ?? 10,
     });
 
@@ -19,103 +21,93 @@
         router.get(route('backend.websitemenu.index'), filters.value, { preserveState: true });
     };
 
-    </script>
+    const deleteMenu = (id) => {
+        if (confirm('Are you sure you want to delete this menu item?')) {
+            router.delete(route('website.menus.destroy', id));
+        }
+    };
+</script>
 
-    <template>
-        <BackendLayout>
-
+<template>
+    <BackendLayout>
+        <div class="container-fluid">
             <div class="row">
-            <!-- Column starts -->
-            <div class="col-xl-12">
-                <div class="card dz-card" id="bootstrap-table1">
-
-                <div class="card-header flex-wrap border-0">
-                    <div>
-                    <button type="button" class="btn px-3 py-2 btn-primary">
-                        {{ $page.props.pageTitle
-                        }}<span class="badge text-bg-light ms-2 mb-0">{{ $page.props.countedData }}</span>
-                    </button>
-                    </div>
-
-                    <Link
-                    :href="route('backend.websitemenu.create')"
-                    type="button"
-                    class="btn px-4 btn-primary"
-                    >
-                    <span class="btn-icon-start text-info"
-                        ><i class="fa fa-plus color-info"></i> </span
-                    >Create
-                    </Link>
-                </div>
-
-                <!--tab-content-->
-                <div class="tab-content" id="myTabContent">
-                    <div
-                    class="tab-pane fade active show"
-                    id="Preview"
-                    role="tabpanel"
-                    aria-labelledby="home-tab"
-                    >
-                    <div class="card-body pt-0">
-                        <div>
-                        <div
-                            class="d-flex justify-content-between w-100 p-3 bg-light rounded"
-                        >
-                            <div class="row w-100">
-                            <!-- Select Dropdown -->
-                            <div class="col-sm-4 col-md-6 d-md-block">
-                                <div class="col-sm-8 col-md-2">
-                                <select
-                                    v-model="filters.numOfData"
-                                    @change="applyFilter"
-                                    class="form-control-sm form-select form-select-sm"
-                                >
-                                    <option value="10">Show 10</option>
-                                    <option value="20">Show 20</option>
-                                    <option value="30">Show 30</option>
-                                    <option value="40">Show 40</option>
-                                    <option value="100">Show 100</option>
-                                    <option value="150">Show 150</option>
-                                    <option value="500">Show 500</option>
-                                </select>
-                                </div>
-                            </div>
-
-                            <!-- Input Field -->
-                            <div class="col-sm-8 col-md-6">
-                                <div class="d-flex gap-2 justify-content-end">
-                                <div class="col-sm-12 col-md-4">
-                                    <input
-                                    id="name"
-                                    v-model="filters.name"
-                                    class="form-control form-control-sm"
-                                    type="text"
-                                    placeholder="Search by websitemenu name"
-                                    @input="applyFilter"
-                                    />
-                                </div>
-                                </div>
-                            </div>
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Website Menu List</h3>
+                            <div class="card-tools">
+                                <Link :href="route('backend.websitemenu.create')" class="btn btn-primary">
+                                    Add New Menu
+                                </Link>
                             </div>
                         </div>
-
-                        <div class="w-full my-3 overflow-x-auto">
-                            <BaseTable />
-                        </div>
-
-                        <Pagination />
-
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Slug</th>
+                                            <th>Order</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template v-for="menu in menus" :key="menu.id">
+                                            <!-- Parent Menu -->
+                                            <tr>
+                                                <td>{{ menu.name }}</td>
+                                                <td>{{ menu.slug }}</td>
+                                                <td>{{ menu.order }}</td>
+                                                <td>
+                                                    <span :class="['badge', menu.status === 'Active' ? 'badge-success' : 'badge-danger']">
+                                                        {{ menu.status }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <Link :href="route('backend.websitemenu.edit', menu.id)" class="btn btn-sm btn-info">
+                                                        Edit
+                                                    </Link>
+                                                    <button @click="deleteMenu(menu.id)" class="btn btn-sm btn-danger">
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <!-- Child Menus -->
+                                            <template v-if="menu.children && menu.children.length">
+                                                <tr v-for="child in menu.children" :key="child.id" class="bg-light">
+                                                    <td class="pl-4">
+                                                        <i class="fas fa-level-down-alt mr-2"></i>
+                                                        {{ child.name }}
+                                                    </td>
+                                                    <td>{{ child.slug }}</td>
+                                                    <td>{{ child.order }}</td>
+                                                    <td>
+                                                        <span :class="['badge', child.status === 'Active' ? 'badge-success' : 'badge-danger']">
+                                                            {{ child.status }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <Link :href="route('backend.websitemenu.edit', child.id)" class="btn btn-sm btn-info">
+                                                            Edit
+                                                        </Link>
+                                                        <button @click="deleteMenu(child.id)" class="btn btn-sm btn-danger">
+                                                            Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                    <!-- /Recent Payments Queue -->
-                    </div>
-                </div>
-                <!--/tab-content-->
-
-
                 </div>
             </div>
-            </div>
-        </BackendLayout>
-    </template>
+        </div>
+    </BackendLayout>
+</template>
 
