@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Traits\SystemTrait;
 use Exception;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Blade;
 
 class WebsitePageController extends Controller
 {
@@ -28,6 +30,7 @@ class WebsitePageController extends Controller
 
     public function index()
     {
+
         return Inertia::render(
             'Backend/WebsitePage/Index',
             [
@@ -130,6 +133,33 @@ class WebsitePageController extends Controller
 
     public function create()
     {
+        $componentPath = resource_path('views/cms/components');
+        $files = File::allFiles($componentPath);
+
+        $groupedComponentFiles = [];
+
+        foreach ($files as $file) {
+            $relativePath = $file->getRelativePath();
+            $fileName = $file->getFilename();
+            $fileContent = File::get($file->getPathname());
+
+            // Process the Blade template with dummy data
+            $processedContent = Blade::render($fileContent, [
+                'website_menus' => [], // Add any dummy data needed for preview
+                'data' => [] // Add any other dummy data needed
+            ]);
+
+            if (!isset($groupedComponentFiles[$relativePath])) {
+                $groupedComponentFiles[$relativePath] = [];
+            }
+
+            $groupedComponentFiles[$relativePath][] = [
+                'name' => $fileName,
+                'content' => $processedContent,
+                'raw_content' => $fileContent
+            ];
+        }
+
         return Inertia::render(
             'Backend/WebsitePage/Form',
             [
@@ -140,6 +170,7 @@ class WebsitePageController extends Controller
                 ],
                 'countedData' => fn() => $this->countedData(),
                 'menus' => fn() => $this->MenuService->activeList(),
+                'groupedComponentFiles' =>  $groupedComponentFiles,
             ]
         );
     }
