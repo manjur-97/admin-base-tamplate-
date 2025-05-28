@@ -38,3 +38,7 @@ Route::middleware([
         return Inertia::render('Dashboard');
     })->name('dashboard');
 });
+
+
+
+Route::get('/about', [App\Http\Controllers\Cms\CmsController::class, 'about'])->name('about');

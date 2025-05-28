@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import BackendLayout from "@/Layouts/BackendLayout.vue";
 import { Link, router, useForm, usePage } from "@inertiajs/vue3";
 import InputError from "@/Components/InputError.vue";
@@ -8,20 +8,51 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AlertMessage from "@/Components/AlertMessage.vue";
 import { displayResponse, displayWarning } from "@/responseMessage.js";
 
-const props = defineProps(["websitepage", "id", "countedData", "menus", "groupedComponentFiles"]);
+const props = defineProps([
+    "websitepage",
+    "id",
+    "countedData",
+    "menus",
+    "groupedComponentFiles",
+]);
+
 const showModal = ref(false);
-const activeTab = ref(Object.keys(props.groupedComponentFiles)[0] || '');
+const activeTab = ref(Object.keys(props.groupedComponentFiles)[0] || "");
 const selectedComponents = ref([]);
 const showPreview = ref({});
+const componentPositions = ref([]);
 
+// Initialize form first
 const form = useForm({
     menu_id: props.websitepage?.menu_id ?? "",
     name: props.websitepage?.name ?? "",
     slug: props.websitepage?.slug ?? "",
     status: props.websitepage?.status ?? "",
-    imagePreview: props.websitepage?.image ?? "",
-    filePreview: props.websitepage?.file ?? "",
+    components: [],
     _method: props.websitepage?.id ? "put" : "post",
+});
+
+// Add function to generate slug
+const generateSlug = (text) => {
+    return text
+        .toString()
+        .toLowerCase()
+        .replace(/\s+/g, '_')        // Replace spaces with -
+        .replace(/[^\w\-]+/g, '')    // Remove all non-word chars
+        .replace(/\-\-+/g, '_')      // Replace multiple - with single -
+        .replace(/^-+/, '')          // Trim - from start of text
+        .replace(/-+$/, '');         // Trim - from end of text
+};
+
+// Add watch for menu_id changes after form is initialized
+watch(() => form.menu_id, (newMenuId) => {
+    if (newMenuId) {
+        const selectedMenu = props.menus.find(menu => menu.id === newMenuId);
+        if (selectedMenu) {
+            form.name = selectedMenu.name;
+            form.slug = generateSlug(selectedMenu.name);
+        }
+    }
 });
 
 const openModal = () => {
@@ -40,12 +71,40 @@ const handleComponentSelect = (component) => {
     const index = selectedComponents.value.indexOf(component);
     if (index === -1) {
         selectedComponents.value.push(component);
+        // Add to positions array with current position
+        componentPositions.value.push({
+            name: component,
+            position: componentPositions.value.length + 1
+        });
     } else {
         selectedComponents.value.splice(index, 1);
+        // Remove from positions array
+        componentPositions.value = componentPositions.value.filter(c => c.name !== component);
+        // Reorder remaining positions
+        componentPositions.value = componentPositions.value.map((c, idx) => ({
+            ...c,
+            position: idx + 1
+        }));
     }
 };
 
+// Add function to reorder components
+const reorderComponent = (fromIndex, toIndex) => {
+    const component = componentPositions.value[fromIndex];
+    componentPositions.value.splice(fromIndex, 1);
+    componentPositions.value.splice(toIndex, 0, component);
+
+    // Update positions
+    componentPositions.value = componentPositions.value.map((c, idx) => ({
+        ...c,
+        position: idx + 1
+    }));
+};
+
 const submit = () => {
+    // Add components data to form before submission
+    form.components = componentPositions.value;
+
     const routeName = props.id
         ? route("backend.websitepage.update", props.id)
         : route("backend.websitepage.store");
@@ -63,6 +122,12 @@ const submit = () => {
         },
     });
 };
+onMounted(() => {
+    // Add Tailwind CSS Script
+    const tailwindScript = document.createElement("script");
+    tailwindScript.src = "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4";
+    document.head.appendChild(tailwindScript);
+});
 </script>
 
 <template>
@@ -114,7 +179,10 @@ const submit = () => {
                                             <option value="no_menu">
                                                 --Not Attached With Menu--
                                             </option>
-                                            <template v-for="menu in menus" :key="menu.id">
+                                            <template
+                                                v-for="menu in menus"
+                                                :key="menu.id"
+                                            >
                                                 <option :value="menu.id">
                                                     {{ menu.name }}
                                                 </option>
@@ -143,67 +211,127 @@ const submit = () => {
                                 </div>
                             </div>
                             <div class="col-md-12 mt-3">
-                               <button type="button" class="btn btn-primary" @click="openModal">Add Section</button>
+                                <button
+                                    type="button"
+                                    class="btn btn-primary"
+                                    @click="openModal"
+                                >
+                                    Add Section
+                                </button>
                             </div>
 
                             <!-- Modal -->
-                            <div v-if="showModal" class="modal fade show" style="display: block;" tabindex="-1">
+                            <div
+                                v-if="showModal"
+                                class="modal fade show"
+                                style="display: block"
+                                tabindex="-1"
+                            >
                                 <div class="modal-dialog modal-xl">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title">Select Components</h5>
-                                            <button type="button" class="btn-close" @click="closeModal"></button>
+                                            <h5 class="modal-title">
+                                                Select Components
+                                            </h5>
+                                            <button
+                                                type="button"
+                                                class="btn-close"
+                                                @click="closeModal"
+                                            ></button>
                                         </div>
                                         <div class="modal-body">
                                             <!-- Tabs -->
-                                            <ul class="nav nav-tabs" id="componentTabs" role="tablist">
-                                                <li v-for="(files, group) in groupedComponentFiles"
+                                            <ul
+                                                class="nav nav-tabs"
+                                                id="componentTabs"
+                                                role="tablist"
+                                            >
+                                                <li
+                                                    v-for="(
+                                                        files, group
+                                                    ) in groupedComponentFiles"
                                                     :key="group"
                                                     class="nav-item"
-                                                    role="presentation">
-                                                    <button class="nav-link"
-                                                            :class="{ active: activeTab === group }"
-                                                            @click="activeTab = group"
-                                                            type="button">
-                                                        {{ group || 'Root' }}
+                                                    role="presentation"
+                                                >
+                                                    <button
+                                                        class="nav-link"
+                                                        :class="{
+                                                            active:
+                                                                activeTab ===
+                                                                group,
+                                                        }"
+                                                        @click="
+                                                            activeTab = group
+                                                        "
+                                                        type="button"
+                                                    >
+                                                        {{ group || "Root" }}
                                                     </button>
                                                 </li>
                                             </ul>
 
                                             <!-- Tab Content -->
                                             <div class="tab-content mt-3">
-                                                <div v-for="(files, group) in groupedComponentFiles"
-                                                     :key="group"
-                                                     :class="{ 'd-none': activeTab !== group }">
+                                                <div
+                                                    v-for="(
+                                                        files, group
+                                                    ) in groupedComponentFiles"
+                                                    :key="group"
+                                                    :class="{
+                                                        'd-none':
+                                                            activeTab !== group,
+                                                    }"
+                                                >
                                                     <div class="row">
-                                                        <div v-for="file in files"
-                                                             :key="file.name"
-                                                             class="col-md-6 mb-3">
+                                                        <div
+                                                            v-for="file in files"
+                                                            :key="file.name"
+                                                            class="col-md-12 mb-3"
+                                                        >
                                                             <div class="card">
-                                                                <div class="card-body">
-                                                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input"
-                                                                                   type="checkbox"
-                                                                                   :id="file.name"
-                                                                                   :checked="selectedComponents.includes(file.name)"
-                                                                                   @change="handleComponentSelect(file.name)">
-                                                                            <label class="form-check-label" :for="file.name">
-                                                                                {{ file.name }}
-                                                                            </label>
-                                                                        </div>
-                                                                        <button type="button"
-                                                                                class="btn btn-sm btn-outline-primary"
-                                                                                @click="togglePreview(file.name)">
-                                                                            {{ showPreview[file.name] ? 'Hide Preview' : 'Show Preview' }}
-                                                                        </button>
+                                                                <div
+                                                                    class="card-body"
+                                                                >
+                                                                    <div
+                                                                        class="form-check mb-3"
+                                                                    >
+                                                                        <input
+                                                                            class="form-check-input"
+                                                                            type="checkbox"
+                                                                            :id="
+                                                                                file.name
+                                                                            "
+                                                                            :checked="
+                                                                                selectedComponents.includes(
+                                                                                    file.name
+                                                                                )
+                                                                            "
+                                                                            @change="
+                                                                                handleComponentSelect(
+                                                                                    file.name
+                                                                                )
+                                                                            "
+                                                                        />
+                                                                        <label
+                                                                            class="form-check-label"
+                                                                            :for="
+                                                                                file.name
+                                                                            "
+                                                                        >
+                                                                            {{
+                                                                                file.name
+                                                                            }}
+                                                                        </label>
                                                                     </div>
-                                                                    <div v-if="showPreview[file.name]" class="preview-content mt-2">
-                                                                        <div class="preview-header mb-2">
-                                                                            <small class="text-muted">Preview:</small>
-                                                                        </div>
-                                                                        <div class="preview-body border rounded p-2 bg-light">
-                                                                            <div v-html="file.content"></div>
+                                                                    <div class="preview-content">
+                                                                        <div class="header-preview-container">
+                                                                            <div
+                                                                                v-html="
+                                                                                    file.content
+                                                                                "
+                                                                                class="tailwind-preview"
+                                                                            ></div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -214,13 +342,57 @@ const submit = () => {
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" @click="closeModal">Close</button>
-                                            <button type="button" class="btn btn-primary">Add Selected Components</button>
+                                            <button
+                                                type="button"
+                                                class="btn btn-secondary"
+                                                @click="closeModal"
+                                            >
+                                                Close
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="btn btn-primary"
+                                            >
+                                                Add Selected Components
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div v-if="showModal" class="modal-backdrop fade show"></div>
+                            <div
+                                v-if="showModal"
+                                class="modal-backdrop fade show"
+                            ></div>
+
+                            <div class="selected-components mt-4" v-if="componentPositions.length > 0">
+                                <h5>Selected Components</h5>
+                                <div class="list-group">
+                                    <div v-for="(component, index) in componentPositions"
+                                         :key="component.name"
+                                         class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>{{ component.name }}</span>
+                                        <div class="btn-group">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    @click="reorderComponent(index, index - 1)"
+                                                    :disabled="index === 0">
+                                                ↑
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    @click="reorderComponent(index, index + 1)"
+                                                    :disabled="index === componentPositions.length - 1">
+                                                ↓
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    @click="handleComponentSelect(component.name)">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="d-flex justify-content-end mt-4">
                                 <PrimaryButton
@@ -261,16 +433,24 @@ const submit = () => {
     border-color: #0d6efd;
 }
 
-.preview-content {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
 .preview-body {
     font-size: 0.875rem;
 }
 
 .modal-xl {
     max-width: 90%;
+}
+
+.header-preview-container {
+    background-color: #d6d9da;
+}
+
+.tailwind-preview :deep(a) {
+    text-decoration: none;
+    color: inherit;
+}
+
+.tailwind-preview :deep(button) {
+    cursor: pointer;
 }
 </style>

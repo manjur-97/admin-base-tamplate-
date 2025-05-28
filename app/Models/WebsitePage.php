@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,21 +15,30 @@ class WebsitePage extends Model
 
     protected $table = 'website_pages';
 
-    protected $fillable = [    'menu_id',    'name',    'slug',];
+    protected $fillable = [
+        'menu_id',
+        'name',
+        'slug',
+        'components'
+    ];
 
-protected static function boot()
-{
-    parent::boot();
-    static::saving(function ($model) {
-        $model->created_at = date('Y-m-d H:i:s');
-    });
+    protected $casts = [
+        'components' => 'array'
+    ];
 
-    static::updating(function ($model) {
-        $model->updated_at = date('Y-m-d H:i:s');
-    });
-}
-public function menu()
-{
-    return $this->belongsTo(\App\Models\Menu::class, 'menu_id');
-}     
+    protected static function boot()
+    {
+        parent::boot();
+        static::saving(function ($model) {
+            $model->created_at = date('Y-m-d H:i:s');
+        });
+
+        static::updating(function ($model) {
+            $model->updated_at = date('Y-m-d H:i:s');
+        });
+    }
+    public function menu()
+    {
+        return $this->belongsTo(WebsiteMenu::class, 'menu_id')->withDefault();
+    }
 }

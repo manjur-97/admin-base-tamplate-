@@ -48,4 +48,9 @@ class WebsiteMenu extends Model
     {
         return $this->children()->with('allChildren');
     }
+
+    public function page()
+    {
+        return $this->hasOne(WebsitePage::class, 'menu_id');
+    }
 }

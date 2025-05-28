@@ -27,7 +27,7 @@ class CmsServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             $settings = CmsSetting::first();
 
-            $website_menus = WebsiteMenu::with('children')
+            $website_menus = WebsiteMenu::with(['children', 'page'])
             ->whereNull('parent_id')
             ->orderBy('order')
             ->get();

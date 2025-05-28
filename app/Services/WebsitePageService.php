@@ -42,15 +42,10 @@ class WebsitePageService
 
     public function delete($id)
     {
-        $dataInfo =  $this->WebsitePageModel->find($id);
+        $dataInfo = $this->WebsitePageModel->find($id);
 
         if (!empty($dataInfo)) {
-
-            $dataInfo->deleted_at = date('Y-m-d H:i:s');
-
-            $dataInfo->status = 'Deleted';
-
-            return ($dataInfo->save());
+            return $dataInfo->forceDelete();
         }
         return false;
     }

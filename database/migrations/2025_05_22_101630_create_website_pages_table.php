@@ -15,15 +15,17 @@ return new class extends Migration
     {
         Schema::create('website_pages', function (Blueprint $table) {
             $table->id();
-                $table->string('name')->nullable();
-    $table->unsignedBigInteger('menu_id')->nullable();
-    $table->foreign('menu_id')->references('id')->on('menus')->onDelete('set null');
-    $table->string('slug')->nullable();
-
-            $table->enum('status',['Active','Inactive','Deleted'])->default('Active');
+            $table->string('name')->nullable();
+            $table->unsignedBigInteger('menu_id')->nullable();
+            $table->foreign('menu_id')
+                  ->references('id')
+                  ->on('website_menus')
+                  ->onDelete('set null');
+            $table->string('slug')->nullable();
+            $table->json('components')->nullable()->comment('Stores the page components with their positions');
+            $table->enum('status', ['Active', 'Inactive', 'Deleted'])->default('Active');
             $table->timestamps();
             $table->softDeletes();
-         
         });
     }
 
