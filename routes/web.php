@@ -17,7 +17,7 @@ use Inertia\Inertia;
 |
 */
 
-Route::get('/', [CmsController::class, 'index'])->name('cms.home');
+Route::get('/', [CmsController::class, 'index'])->name('home');
 
 Route::get('/cms/settings', [CmsSettingController::class, 'index'])->name('cms.settings.index');
 Route::post('/cms/settings/save', [CmsSettingController::class, 'saveSetting'])->name('cms.settings.save');
