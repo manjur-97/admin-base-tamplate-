@@ -1,4 +1,4 @@
-<div class="bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 text-white -mt-4">
+<div class="bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 text-white ">
   <div class="container mx-auto">
     <!-- Top Bar -->
     <div class="py-2 px-4 flex justify-between items-center text-sm border-b border-white/10">
