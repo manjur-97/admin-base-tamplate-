@@ -41,4 +41,6 @@ Route::middleware([
 
 
 
+
+Route::get('/contact', [App\Http\Controllers\Cms\CmsController::class, 'contact'])->name('contact');
 Route::get('/about', [App\Http\Controllers\Cms\CmsController::class, 'about'])->name('about');

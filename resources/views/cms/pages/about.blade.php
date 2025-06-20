@@ -1,7 +1,7 @@
 @extends('cms.app')
 
 @section('content')
-    @include('cms.components.section.section_2')
-    @include('cms.components.team.team_1')
-    @include('cms.components.contact.contact_1')
+    @include('cms.components.hero.hero_4')
+    @include('cms.components.faq.faq_1')
+    @include('cms.components.map.map_1')
 @endsection

@@ -12,7 +12,7 @@ class CmsController extends Controller
     public function index()
     {
         $cmsSetting = CmsSetting::first();
-        $header = $cmsSetting->header;
+        $header = $cmsSetting->header??"";
 
         return view('cms.pages.home', compact('cmsSetting'));
     }
@@ -23,6 +23,16 @@ class CmsController extends Controller
     {
         $pageComponents = WebsitePage::where('slug', 'video-gallery')->first();
         return view('cms.pages.video-gallery', compact('pageComponents'));
+    }
+
+
+   
+
+
+    public function contact()
+    {
+        $pageComponents = WebsitePage::where('slug', 'contact')->first();
+        return view('cms.pages.contact', compact('pageComponents'));
     }
 
 

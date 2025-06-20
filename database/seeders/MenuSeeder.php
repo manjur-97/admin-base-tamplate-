@@ -82,7 +82,41 @@ class MenuSeeder extends Seeder
             ],
             [
 
-                'name' => 'Website Menu',
+                'name' => 'Website Layout',
+                'icon' => 'fas fa-home',
+                'route' => null,
+                'description' => 'Website Layout',
+                'sorting' => 2,
+                'parent_name' => null,
+                'permission_name' => 'admin',
+                'status' => 'Active',
+            ],
+            [
+
+                'name' => 'Header',
+                'icon' => 'fas fa-home',
+                'route' => "backend.cms-setting.header-list",
+                'description' => 'Website Header',
+                'sorting' => 1,
+                'parent_name' => 'Website Layout',
+                'permission_name' => 'admin',
+                'status' => 'Active',
+            ],
+            [
+
+                'name' => 'Footer',
+                'icon' => 'fas fa-home',
+                'route' => "backend.cms-setting.footer-list",
+                'description' => 'Website Footer',
+                'sorting' => 2,
+                'parent_name' => 'Website Layout',
+                'permission_name' => 'admin',
+                'status' => 'Active',
+            ],
+           
+            [
+
+                'name' => 'Menu',
                 'icon' => 'fas fa-home',
                 'route' => 'backend.websitemenu.index',
                 'description' => 'Website Menu',
@@ -93,7 +127,7 @@ class MenuSeeder extends Seeder
             ],
             [
 
-                'name' => 'Website Page',
+                'name' => 'Page',
                 'icon' => 'fas fa-home',
                 'route' => 'backend.websitepage.index',
                 'description' => 'Website Page',
