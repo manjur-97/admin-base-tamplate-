@@ -37,6 +37,10 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('backend')
                 ->as('backend.')
                 ->group(base_path('routes/backend.php'));
+            Route::middleware('web')
+                ->prefix('tanent')
+                ->as('tanent.')
+                ->group(base_path('routes/tanent.php'));
 
           
 

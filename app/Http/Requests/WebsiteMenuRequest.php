@@ -16,9 +16,11 @@ class WebsiteMenuRequest extends FormRequest
         switch ($this->method()) {
             case 'POST':
                 return [
-                'name' => 'nullable|string|max:255',
-                'slug' => 'nullable|string|max:255',
-                'order' => 'nullable|integer',
+                'name' => 'required|string|max:255',
+                'slug' => 'required|string|max:255',
+                'order' => 'required|integer',
+                'parent_id' => 'nullable|integer',
+                'website_id' => 'required|integer',
                 ];
                 break;
 
@@ -28,6 +30,8 @@ class WebsiteMenuRequest extends FormRequest
                 'name' => 'nullable|string|max:255',
                 'slug' => 'nullable|string|max:255',
                 'order' => 'nullable|integer',
+                'parent_id' => 'nullable|integer',
+                'website_id' => 'required|integer',
                 ];
                 break;
         }

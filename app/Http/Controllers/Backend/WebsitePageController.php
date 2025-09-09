@@ -178,8 +178,11 @@ class WebsitePageController extends Controller
 
     private function createDynamicPage($page)
     {
+       
         // Create pages directory if it doesn't exist
-        $pagesDirectory = resource_path('views/cms/pages');
+       
+        $pagesDirectory = resource_path("views/cms/pages/$page->website_id");
+      
         if (!File::exists($pagesDirectory)) {
             File::makeDirectory($pagesDirectory, 0755, true);
         }
@@ -190,12 +193,12 @@ class WebsitePageController extends Controller
         File::put($bladePath, $bladeContent);
 
         // Add route to web.php
-        $routeContent = "\nRoute::get('/" . $page->slug . "', [App\Http\Controllers\Cms\CmsController::class, '" . $page->slug . "'])->name('" . $page->slug . "');";
-        $webPath = base_path('routes/web.php');
+        $routeContent = "\nRoute::get('/".$page->website->slug."/" . $page->slug . "', [App\Http\Controllers\Cms\Tanent".$page->website_id."Controller::class, '" . $page->slug . "'])->name('" . $page->website->slug . "." . $page->slug . "');";
+        $webPath = base_path('routes/cms_dynamic.php');
         File::append($webPath, $routeContent);
-
+     
         // Add method to CmsController
-        $controllerPath = app_path('Http/Controllers/Cms/CmsController.php');
+        $controllerPath = app_path('Http/Controllers/Cms/Tanent'.$page->website_id.'Controller.php');
         $controllerContent = $this->generateControllerMethod($page);
 
         // Read the current controller content
@@ -252,14 +255,21 @@ class WebsitePageController extends Controller
 
     private function generateControllerMethod($page)
     {
-        return "\n    public function " . $page->slug . "()\n    {\n        \$pageComponents = WebsitePage::where('slug', '" . $page->slug . "')->first();\n        return view('cms.pages." . $page->slug . "', compact('pageComponents'));\n    }\n";
+        return "\n    public function " . $page->slug . "(Request \$request)\n    {    
+            extract(\$this->getWebsiteData(\$request));   
+            \$pageComponents = WebsitePage::where('slug', '" . $page->slug . "')->first();        
+            return view('cms.pages." .$page->website_id.".". $page->slug . "', compact('pageComponents','cmsSetting', 'website_menus', 'website', 'slug'));
+        }\n";
     }
 
     public function store(WebsitePageRequest $request)
     {
+        
         DB::beginTransaction();
-        try {
+        // try {
             $data = $request->validated();
+
+         
 
             // Validate menu_id if it's provided
             if (!empty($data['menu_id'])) {
@@ -284,126 +294,75 @@ class WebsitePageController extends Controller
                 $this->createDynamicPage($dataInfo);
 
                 $message = 'WebsitePage created successfully';
-                $this->storeAdminWorkLog($dataInfo->id, 'website_pages', $message);
+                // $this->storeAdminWorkLog($dataInfo->id, 'website_pages', $message);
 
                 DB::commit();
 
-                return redirect()->route("backend.websitepage.index")->with('successMessage', $message);
+                return redirect()->route("tanent.website.pages_config", $dataInfo->website_id)->with('successMessage', $message);
             } else {
                 DB::rollBack();
                 $message = "Failed to create WebsitePage.";
                 return redirect()->back()->with('errorMessage', $message);
             }
-        } catch (Exception $err) {
-            DB::rollBack();
-            Log::error('WebsitePage Creation Error: ' . $err->getMessage());
-            Log::error('Stack trace: ' . $err->getTraceAsString());
+        // } catch (Exception $err) {
+        //     DB::rollBack();
+        //     Log::error('WebsitePage Creation Error: ' . $err->getMessage());
+        //     Log::error('Stack trace: ' . $err->getTraceAsString());
 
-            $this->storeSystemError('Backend', 'WebsitePageController', 'store', substr($err->getMessage(), 0, 1000));
+        //     $this->storeSystemError('Backend', 'WebsitePageController', 'store', substr($err->getMessage(), 0, 1000));
 
-            if (str_contains($err->getMessage(), 'foreign key constraint fails')) {
-                $message = "The selected menu is invalid or has been deleted.";
-            } else {
-                $message = "Server Errors Occurred. Please Try Again.";
-            }
+        //     if (str_contains($err->getMessage(), 'foreign key constraint fails')) {
+        //         $message = "The selected menu is invalid or has been deleted.";
+        //     } else {
+        //         $message = "Server Errors Occurred. Please Try Again.";
+        //     }
 
-            return redirect()->back()
-                ->with('errorMessage', $message)
-                ->withInput();
-        }
+        //     return redirect()->back()
+        //         ->with('errorMessage', $message)
+        //         ->withInput();
+        // }
     }
 
-    public function edit($id)
-    {
-        $websitepage = $this->WebsitePageService->find($id);
-        $componentPath = resource_path('views/cms/components');
-        $files = File::allFiles($componentPath);
 
-        $groupedComponentFiles = [];
-
-        foreach ($files as $file) {
-            $relativePath = $file->getRelativePath();
-            $fileName = $file->getFilename();
-            $fileContent = File::get($file->getPathname());
-
-            // Process the Blade template with dummy data
-            $processedContent = Blade::render($fileContent, [
-                'website_menus' => [], // Add any dummy data needed for preview
-                'data' => [] // Add any other dummy data needed
-            ]);
-
-            if (!isset($groupedComponentFiles[$relativePath])) {
-                $groupedComponentFiles[$relativePath] = [];
-            }
-
-            $groupedComponentFiles[$relativePath][] = [
-                'name' => $fileName,
-                'content' => $processedContent,
-                'raw_content' => $fileContent
-            ];
-        }
-
-        return Inertia::render(
-            'Backend/WebsitePage/Form',
-            [
-                'pageTitle' => fn() => 'WebsitePage Edit',
-                'breadcrumbs' => fn() => [
-                    ['link' => null, 'title' => 'WebsitePage Manage'],
-                    ['link' => route('backend.websitepage.edit', $id), 'title' => 'WebsitePage Edit'],
-                ],
-                'websitepage' => fn() => $websitepage,
-                'id' => fn() => $id,
-                'countedData' => fn() => $this->countedData(),
-                'menus' => fn() => $this->MenuService->activeList(),
-                'groupedComponentFiles' => $groupedComponentFiles,
-            ]
-        );
-    }
 
     public function update(WebsitePageRequest $request, $id)
     {
+    
         DB::beginTransaction();
         try {
             $data = $request->validated();
             $oldPage = $this->WebsitePageService->find($id);
 
+            // Prevent slug and website_id from being changed
+            $data['slug'] = $oldPage->slug;
+            $data['website_id'] = $oldPage->website_id;
+
+            // components json encode kore nite hobe
+            if (isset($data['components'])) {
+                $data['components'] = json_encode($data['components']);
+            }
+
             $dataInfo = $this->WebsitePageService->update($data, $id);
 
             if ($dataInfo) {
-                // If slug has changed, update the files
-                if ($oldPage->slug !== $dataInfo->slug) {
-                    // Delete old blade file
-                    $oldBladePath = resource_path('views/cms/pages/' . $oldPage->slug . '.blade.php');
-                    if (File::exists($oldBladePath)) {
-                        File::delete($oldBladePath);
-                    }
-
-                    // Update route in web.php
-                    $webPath = base_path('routes/web.php');
-                    $routeContent = File::get($webPath);
-                    $oldRoute = "Route::get('/" . $oldPage->slug . "', [App\Http\Controllers\Cms\CmsController::class, '" . $oldPage->slug . "'])->name('" . $oldPage->slug . "');";
-                    $newRoute = "Route::get('/" . $dataInfo->slug . "', [App\Http\Controllers\Cms\CmsController::class, '" . $dataInfo->slug . "'])->name('" . $dataInfo->slug . "');";
-                    $newContent = str_replace($oldRoute, $newRoute, $routeContent);
-                    File::put($webPath, $newContent);
-
-                    // Update method in CmsController
-                    $controllerPath = app_path('Http/Controllers/Cms/CmsController.php');
-                    $controllerContent = File::get($controllerPath);
-                    $oldMethodPattern = "/\s*public\s+function\s+" . $oldPage->slug . "\(\)\s*{[^}]*}/s";
-                    $newMethod = $this->generateControllerMethod($dataInfo);
-                    $newControllerContent = preg_replace($oldMethodPattern, $newMethod, $controllerContent);
-                    File::put($controllerPath, $newControllerContent);
+                if( $data['slug']){
+                    $bladePath = resource_path('views/cms/pages/' . $oldPage->website_id . '/' . $data['slug'] . '.blade.php');
+                }else{
+                    $bladePath = resource_path('views/cms/pages/' . $oldPage->website_id . '/home.blade.php');
+                }
+                // Only update the content of the existing blade file
+                
+                $bladeContent = $this->generateBladeContent($dataInfo);
+                if (File::exists($bladePath)) {
+                    File::put($bladePath, $bladeContent);
                 }
 
-                // Create/Update blade template
-                $this->createDynamicPage($dataInfo);
-
                 $message = 'WebsitePage updated successfully';
-                $this->storeAdminWorkLog($dataInfo->id, 'website_pages', $message);
+          
 
                 DB::commit();
 
-                return redirect()->route("backend.websitepage.index")->with('successMessage', $message);
+                return redirect()->route("tanent.website.page_create", $id)->with('successMessage', $message);
             } else {
                 DB::rollBack();
                 $message = "Failed to update WebsitePage.";

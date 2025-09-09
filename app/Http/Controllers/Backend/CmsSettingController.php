@@ -112,13 +112,17 @@ class CmsSettingController extends Controller
     {
         $request->validate([
             'header' => 'required|string',
-            'file_name' => 'required|string'
+            'file_name' => 'required|string',
+            'website_id' => 'required'
         ]);
 
-        $settings = CmsSetting::first() ?? new CmsSetting();
-
-        $settings->header = $request->file_name;
-        $settings->save();
+        CmsSetting::updateOrCreate(
+            ['website_id' => $request->website_id], // Search by website_id
+            [
+                'header' => $request->file_name,
+               
+            ]
+        );
 
         return redirect()
             ->back()
@@ -129,14 +133,17 @@ class CmsSettingController extends Controller
     {
         $request->validate([
             'footer' => 'required|string',
-            'file_name' => 'required|string'
+            'file_name' => 'required|string',
+             'website_id' => 'required'
         ]);
 
-        $settings = CmsSetting::first() ?? new CmsSetting();
-
-        $settings->footer = $request->file_name;
-        $settings->save();
-
+        CmsSetting::updateOrCreate(
+            ['website_id' => $request->website_id], // Search by website_id
+            [
+                'footer' => $request->file_name,
+               
+            ]
+        );
         return redirect()
             ->back()
             ->with('successMessage', 'Footer updated successfully');

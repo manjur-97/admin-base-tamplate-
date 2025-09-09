@@ -16,7 +16,8 @@ return new class extends Migration
         Schema::create('website_menus', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->integer('website_id');
+            $table->string('slug');
             $table->integer('order')->default(0);
             $table->foreignId('parent_id')->nullable()->constrained('website_menus')->onDelete('cascade');
             $table->enum('status', ['Active', 'Inactive', 'Deleted'])->default('Active');

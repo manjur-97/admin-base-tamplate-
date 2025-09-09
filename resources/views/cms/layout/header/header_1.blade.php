@@ -38,7 +38,7 @@
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <!-- Logo -->
-                <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
+                <a href="" class="flex items-center space-x-2 group">
                     <img src="{{ $cmsSetting->logo ?? 'https://readymadeui.com/readymadeui.svg' }}"
                          alt="Logo"
                          class="h-10 w-auto group-hover:scale-105 transition-transform duration-300">
@@ -46,31 +46,35 @@
 
                 <!-- Desktop Navigation -->
                 <nav class="hidden md:flex items-center space-x-8">
-                    @foreach($website_menus as $menu)
-                        <div class="relative group">
-                            <a href="{{ $menu->page ? route($menu->page->slug) : '#' }}"
-                               class="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 flex items-center space-x-1">
-                                <span>{{ $menu->name }}</span>
-                                @if($menu->children->count() > 0)
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                    </svg>
-                                @endif
-                            </a>
-                            @if($menu->children->count() > 0)
-                                <div class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top scale-95 group-hover:scale-100 border border-gray-100">
-                                    <div class="py-2">
-                                        @foreach($menu->children as $child)
-                                            <a href="{{ $child->page ? route($child->page->slug) : '#' }}"
-                                               class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300">
-                                                {{ $child->name }}
-                                            </a>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
+                    <div class="relative group">
+                        <a href="/" class="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 flex items-center space-x-1">
+                            <span>Home</span>
+                        </a>
+                    </div>
+                    <div class="relative group">
+                        <a href="/about" class="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 flex items-center space-x-1">
+                            <span>About</span>
+                        </a>
+                    </div>
+                    <div class="relative group">
+                        <a href="#" class="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 flex items-center space-x-1">
+                            <span>Services</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </a>
+                        <div class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top scale-95 group-hover:scale-100 border border-gray-100">
+                            <div class="py-2">
+                                <a href="/services/web-development" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300">Web Development</a>
+                                <a href="/services/seo" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300">SEO</a>
+                            </div>
                         </div>
-                    @endforeach
+                    </div>
+                    <div class="relative group">
+                        <a href="/contact" class="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 flex items-center space-x-1">
+                            <span>Contact</span>
+                        </a>
+                    </div>
                 </nav>
 
                 <!-- CTA Buttons -->

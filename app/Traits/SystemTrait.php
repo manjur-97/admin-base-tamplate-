@@ -2,12 +2,16 @@
 
 namespace App\Traits;
 
+use App\Models\CmsSetting;
 use App\Models\Description;
 use App\Models\Employee;
 use App\Models\RolePermission;
 use Illuminate\Support\Str;
 use App\Models\SystemErrorLog;
 use App\Models\SystemLog;
+use App\Models\Website;
+use App\Models\WebsiteMenu;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 trait SystemTrait
@@ -193,32 +197,6 @@ trait SystemTrait
         return $flag;
     }
 
-    public function storeDescriptionSegment($dataId, $referenceTable, $segment, $type)
-    {
-        $data = [
-            'data_id' => $dataId,
-            'reference_table' => $referenceTable,
-            'details_segment' => $segment,
-            'type' => $type,
-        ];
-        return Description::create($data);
-        //return true;
-    }
-
-    public function deleteDescription($dataId, $referenceTable)
-    {
-        return Description::where('data_id', $dataId)
-            ->where('reference_table', $referenceTable)
-            ->update(['deleted_at' => now(), 'status' => 'Deleted']);
-    }
-    public function getDescriptions($datas)
-    {
-        $description = '';
-        foreach ($datas as $descriptionInfo)
-            $description .= $descriptionInfo->details_segment;
-
-        return $description;
-    }
 
     public function checkAuthentication($route)
     {
@@ -323,5 +301,22 @@ trait SystemTrait
 
     public function overtimeAdjustment(){
         return 0;
+    }
+
+    public function getWebsiteData(Request $request): array
+    {
+        $slug = $request->segment(1);
+
+        $website = Website::where("slug", $slug)->firstOrFail();
+
+        $website_menus = WebsiteMenu::where("website_id", $website->id)
+            ->with(["children", "page"])
+            ->whereNull("parent_id")
+            ->orderBy("order")
+            ->get();
+
+        $cmsSetting = CmsSetting::where("website_id", $website->id)->first() ;//for header footer
+
+        return compact("slug", "website", "website_menus", "cmsSetting");
     }
 }

@@ -12,7 +12,8 @@ class CmsSetting extends Model
         'form',
         'gallery',
         'slider',
-        'page_header'
+        'page_header',
+        'website_id'
     ];
 
     // Get all settings

@@ -15,6 +15,7 @@ class WebsiteMenu extends Model
     protected $table = 'website_menus';
 
     protected $fillable = [
+        'website_id',
         'name',
         'slug',
         'order',

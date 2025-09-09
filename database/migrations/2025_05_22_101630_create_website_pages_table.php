@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('website_pages', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
+            $table->integer('website_id');
             $table->unsignedBigInteger('menu_id')->nullable();
             $table->foreign('menu_id')
                   ->references('id')

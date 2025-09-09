@@ -59,7 +59,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'auth' => [
                 'admin' => fn() => auth('admin')->user(),
-                'employee' => fn() => auth('employee')->user(),
+                'tanent' => fn() => auth('tanent')->user(),
 
             ],
             'sideMenus' => $sideMenus,
@@ -68,8 +68,8 @@ class HandleInertiaRequests extends Middleware
                 $role_id = null;
 
                 // Determine the role ID
-                if (auth()->guard('employee')->check()) {
-                    $role_id = auth()->guard('employee')->user()->role_id;
+                if (auth()->guard('tanent')->check()) {
+                    $role_id = auth()->guard('tanent')->user()->role_id;
                 } elseif (auth()->guard('admin')->check()) {
                     $role_id = auth()->guard('admin')->user()->role_id;
                 }

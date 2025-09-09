@@ -24,7 +24,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [LoginController::class, 'loginPage'])->name('home')->middleware('AuthCheck');
+// Route::get('/', [LoginController::class, 'loginPage'])->name('home')->middleware('AuthCheck');
+Route::get('/', [LoginController::class, 'loginPage'])->name('home');
 
 Route::get('/cache-clear', function () {
     Artisan::call('cache:clear');
@@ -46,10 +47,9 @@ Route::group(['as' => 'auth.'], function () {
     Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 });
 
-Route::group(['as' => 'employee.'], function () {
-    Route::get('/employee_login', [LoginController::class, 'loginPage'])->name('login2')->middleware('AuthCheck');
-    Route::post('/employee_login', [LoginController::class, 'EmployeeLogin'])->name('employee_login');
-    Route::get('/employee_logout', [LoginController::class, 'EmployeeLogout'])->name('employee_logout');
+Route::group(['as' => 'tanent.'], function () {
+   
+   
 });
 
 

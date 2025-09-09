@@ -48,21 +48,35 @@ class WebsiteController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'website_id' => 'required',
             'parent_id' => 'nullable|exists:website_menus,id',
-            'order' => 'required|integer|min:0',
-            'status' => 'required|in:Active,Inactive'
+            
         ]);
+        $lastOrder = WebsiteMenu::where('website_id', $request->website_id)->max('order');
+
+        $existingMenu = WebsiteMenu::whereRaw('LOWER(name) = ?', [strtolower($request->name)])
+            ->where('website_id', $request->website_id)
+            ->first();
+            
+        if ($existingMenu) {
+            return response()->json([
+                'message' => 'Menu with this name already exists.'
+            ], 422);
+        }
 
         $menu = WebsiteMenu::create([
             'name' => $request->name,
+            'website_id' => $request->website_id,
             'slug' => Str::slug($request->name),
             'parent_id' => $request->parent_id,
-            'order' => $request->order,
-            'status' => $request->status
+            'order' => $lastOrder + 1,
+            'status' => "Active"
         ]);
 
-        return redirect()->route('backend.websitemenu.index')
-            ->with('success', 'Menu created successfully.');
+        return response()->json([
+            'message' => 'Menu created successfully.',
+            'menu' => $menu
+        ], 201);
     }
 
     public function edit(WebsiteMenu $menu)
@@ -77,35 +91,94 @@ class WebsiteController extends Controller
         ]);
     }
 
-    public function update(Request $request, WebsiteMenu $menu)
+    public function update(Request $request, $id)
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'website_id' => 'required',
             'parent_id' => 'nullable|exists:website_menus,id',
             'order' => 'required|integer|min:0',
             'status' => 'required|in:Active,Inactive'
         ]);
 
+        $menu = WebsiteMenu::findOrFail($id);
+
+        // Check for duplicate name (case-insensitive) excluding current menu
+        $existingMenu = WebsiteMenu::whereRaw('LOWER(name) = ?', [strtolower($request->name)])
+            ->where('website_id', $request->website_id)
+            ->where('id', '!=', $id)
+            ->first();
+            
+        if ($existingMenu) {
+            return response()->json([
+                'message' => 'Menu with this name already exists (case-insensitive).'
+            ], 422);
+        }
+
         $menu->update([
             'name' => $request->name,
+            'website_id' => $request->website_id,
             'slug' => Str::slug($request->name),
             'parent_id' => $request->parent_id,
             'order' => $request->order,
             'status' => $request->status
         ]);
 
-        return redirect()->route('website.menus.index')
-            ->with('success', 'Menu updated successfully.');
+        return response()->json([
+            'message' => 'Menu updated successfully.',
+            'menu' => $menu
+        ], 200);
     }
 
-    public function destroy(WebsiteMenu $menu)
+    public function destroy($id)
     {
+        $menu = WebsiteMenu::findOrFail($id);
+        
         // Delete all children first
         $menu->children()->delete();
         $menu->delete();
 
-        return redirect()->route('website.menus.index')
-            ->with('success', 'Menu deleted successfully.');
+        return response()->json([
+            'message' => 'Menu deleted successfully.'
+        ], 200);
+    }
+
+    public function reorder(Request $request, $id)
+    {
+        $request->validate([
+            'parent_id' => 'nullable|exists:website_menus,id',
+            'order' => 'required|integer|min:0',
+            'website_id' => 'required'
+        ]);
+
+        $menu = WebsiteMenu::findOrFail($id);
+        
+        // Update the menu with new parent_id and order
+        $menu->update([
+            'parent_id' => $request->parent_id,
+            'order' => $request->order
+        ]);
+
+        // Reorder all menus in the same parent to ensure proper ordering
+        $siblings = WebsiteMenu::where('parent_id', $request->parent_id)
+            ->where('website_id', $request->website_id)
+            ->where('id', '!=', $id)
+            ->orderBy('order')
+            ->get();
+
+        $order = 0;
+        foreach ($siblings as $sibling) {
+            if ($order == $request->order) {
+                $order++; // Skip the position where we just placed our menu
+            }
+            $sibling->update(['order' => $order]);
+            $order++;
+        }
+
+        return response()->json([
+            'message' => 'Menu order updated successfully.',
+            'menu' => $menu
+        ], 200);
     }
 
     private function countedData()

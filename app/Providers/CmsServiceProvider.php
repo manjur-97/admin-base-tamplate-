@@ -25,25 +25,9 @@ class CmsServiceProvider extends ServiceProvider
     {
         // Share CMS components with all views
         View::composer('*', function ($view) {
-            $settings = CmsSetting::first();
 
-            $website_menus = WebsiteMenu::with(['children', 'page'])
-            ->whereNull('parent_id')
-            ->orderBy('order')
-            ->get();
 
-            if (!$settings) {
-                $settings = new CmsSetting();
-                $settings->header = 'header_10.blade.php';
-                $settings->footer = 'footer_1.blade.php';
-                $settings->save();
-            }
-
-            $view->with([
-                'cms_header' => $settings->header,
-                'cms_footer' => $settings->footer,
-                'website_menus' => $website_menus
-            ]);
+          
         });
     }
 }

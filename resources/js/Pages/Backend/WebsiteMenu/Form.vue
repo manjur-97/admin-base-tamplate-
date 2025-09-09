@@ -53,73 +53,71 @@ const submit = () => {
               type="button"
               class="btn btn-primary"
             >
-              View WebsiteMenu List <span
-                                class="badge text-bg-light ms-2 mb-0"
-                                >{{ countedData }}</span
-                            >
+              View WebsiteMenu List
+              <span class="badge text-bg-light ms-2 mb-0">{{
+                countedData
+              }}</span>
             </Link>
           </div>
           <div class="card-body">
             <AlertMessage />
             <form @submit.prevent="submit">
               <div class="row g-3">
+                <div class="col-md-6">
+                  <InputLabel for="name" value="Name" />
+                  <input
+                    id="name"
+                    class="form-control"
+                    v-model="form.name"
+                    type="text"
+                    placeholder="Name"
+                  />
+                  <InputError class="mt-2" :message="form.errors.name" />
+                </div>
 
-<div class="col-md-6">
-  <InputLabel for="name" value="Name" />
-  <input
-    id="name"
-    class="form-control"
-    v-model="form.name"
-    type="text"
-    placeholder="Name"
-  />
-  <InputError class="mt-2" :message="form.errors.name" />
-</div>
+                <div class="col-md-6">
+                  <InputLabel for="parent_id" value="Parent Menu (Optional)" />
+                  <select
+                    id="parent_id"
+                    class="form-control"
+                    v-model="form.parent_id"
+                  >
+                    <option value="">None</option>
+                    <option
+                      v-for="parent in parentMenus"
+                      :key="parent.id"
+                      :value="parent.id"
+                    >
+                      {{ parent.name }}
+                    </option>
+                  </select>
+                  <InputError class="mt-2" :message="form.errors.parent_id" />
+                </div>
 
-<div class="col-md-6">
-  <InputLabel for="parent_id" value="Parent Menu (Optional)" />
-  <select
-    id="parent_id"
-    class="form-control"
-    v-model="form.parent_id"
-  >
-    <option value="">None</option>
-    <option
-      v-for="parent in parentMenus"
-      :key="parent.id"
-      :value="parent.id"
-    >
-      {{ parent.name }}
-    </option>
-  </select>
-  <InputError class="mt-2" :message="form.errors.parent_id" />
-</div>
+                <div class="col-md-6">
+                  <InputLabel for="order" value="Order" />
+                  <input
+                    id="order"
+                    class="form-control"
+                    v-model="form.order"
+                    type="text"
+                    placeholder="Order"
+                  />
+                  <InputError class="mt-2" :message="form.errors.order" />
+                </div>
 
-<div class="col-md-6">
-  <InputLabel for="order" value="Order" />
-  <input
-    id="order"
-    class="form-control"
-    v-model="form.order"
-    type="text"
-    placeholder="Order"
-  />
-  <InputError class="mt-2" :message="form.errors.order" />
-</div>
-
-<div class="col-md-6">
-  <InputLabel for="status" value="Status" />
-  <select
-    id="status"
-    class="form-control"
-    v-model="form.status"
-  >
-    <option value="Active">Active</option>
-    <option value="Inactive">Inactive</option>
-  </select>
-  <InputError class="mt-2" :message="form.errors.status" />
-</div>
-
+                <div class="col-md-6">
+                  <InputLabel for="status" value="Status" />
+                  <select
+                    id="status"
+                    class="form-control"
+                    v-model="form.status"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                  <InputError class="mt-2" :message="form.errors.status" />
+                </div>
               </div>
               <div class="d-flex justify-content-end mt-4">
                 <PrimaryButton

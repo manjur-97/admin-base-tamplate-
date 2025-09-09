@@ -21,6 +21,7 @@ Route::get('rolepermission/{id}/status/{status}/change', 'App\Http\Controllers\B
 // WebsiteMenu
 Route::resource('websitemenu', 'App\Http\Controllers\Backend\WebsiteController')->except(['show']);
 Route::get('websitemenu/{id}/status/{status}/change', 'App\Http\Controllers\Backend\WebsiteController@changeStatus')->name('websitemenu.status.change');
+Route::post('websitemenu/reorder/{id}', 'App\Http\Controllers\Backend\WebsiteController@reorder')->name('websitemenu.reorder');
 
 
 // WebsitePage

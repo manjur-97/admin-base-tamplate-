@@ -17,6 +17,7 @@ class WebsitePage extends Model
 
     protected $fillable = [
         'menu_id',
+        'website_id',
         'name',
         'slug',
         'components'
@@ -40,5 +41,9 @@ class WebsitePage extends Model
     public function menu()
     {
         return $this->belongsTo(WebsiteMenu::class, 'menu_id')->withDefault();
+    }
+    public function website()
+    {
+        return $this->belongsTo(Website::class, 'website_id')->withDefault();
     }
 }

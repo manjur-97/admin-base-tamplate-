@@ -45,9 +45,9 @@ return [
             'driver' => 'session',
             'provider' => 'admins',
         ],
-        'employee' => [
+        'tanent' => [
             'driver' => 'session',
-            'provider' => 'employees',  // This should correspond to the 'employees' provider
+            'provider' => 'tanents',  // This should correspond to the 'employees' provider
         ],
     ],
 
@@ -77,9 +77,9 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class,
         ],
-        'employees' => [
+        'tanents' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Employee::class,  // Your Employee model
+            'model' => App\Models\Tanent::class,  // Your Employee model
         ],
 
         // 'users' => [

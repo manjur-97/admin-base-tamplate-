@@ -12,7 +12,7 @@ const authKeys = Object.keys(props.auth);
 const activeAuthKey = authKeys.findIndex((key) => props.auth[key] !== null);
 const activeAuth = authKeys[activeAuthKey];
 
-const user = props.auth.admin || props.auth.employee;
+const user = props.auth.admin || props.auth.tanent;
 const handleResize = () => {
   screenWidth.value = window.innerWidth;
 };

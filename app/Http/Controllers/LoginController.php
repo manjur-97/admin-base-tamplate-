@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\EmployeeLoginRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\TanentLoginRequest;
+use App\Models\Tanent;
 use App\Services\AdminService;
 
 use App\Traits\SystemTrait;
@@ -103,9 +105,7 @@ class LoginController extends Controller
     function loginPage()
     {
 
-        if (Auth::guard('employee')->check()) {
-            return redirect()->route('backend.employee_dashboard');
-        }
+        
         return Inertia::render('Login');
     }
 
@@ -115,10 +115,38 @@ class LoginController extends Controller
         session()->flash('successMessage', "Successfully Logged Out.");
         return redirect()->route('backend.auth.login');
     }
-    public function EmployeeLogout()
+    public function TanentLogout()
     {
-        auth('employee')->logout();
+        auth('tanent')->logout();
         session()->flash('successMessage', "Successfully Logged Out.");
         return redirect()->route('backend.auth.login');
+    }
+    public function TanentLogin(TanentLoginRequest $request)
+    {
+
+        $request->validated();
+
+        $userInfo =  Tanent::where('mobile', request()->mobile)->first();
+      
+
+
+        if (!empty($userInfo)) {
+            if ($userInfo->is_mobile_verified != 1) {
+                
+                return redirect()->route('tanent.register')->withErrors('Please verify your mobile number.');  
+            }
+
+            if (Hash::check(request()->password, $userInfo->password)) {
+
+                Auth::guard('tanent')->login($userInfo);
+
+                return redirect()->route('tanent.dashboard')->with('successMessage', 'Logged In Successfully');
+                // return Inertia::render('Backend/Dashboard')->with('warningMessage', 'Logged In Successfully');
+            } else {
+                return redirect()->route('tanent.register')->withErrors('Wrong Password. Please Enter Valid Password.');
+            }
+        } else {
+            return redirect()->route('tanent.register')->withErrors('Invalid Username. Please Enter Valid Username.');  
+        }
     }
 }
